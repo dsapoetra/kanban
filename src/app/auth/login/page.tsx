@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LoginRequest, AuthResponse, ApiError } from '@/types/auth';
 
-export default function Home() {
+export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<LoginRequest>({
     email: '',
@@ -21,7 +21,7 @@ export default function Home() {
       ...prev,
       [name]: value,
     }));
-
+    
     // Clear field-specific errors when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -96,7 +96,7 @@ export default function Home() {
             </Link>
           </p>
         </div>
-
+        
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
