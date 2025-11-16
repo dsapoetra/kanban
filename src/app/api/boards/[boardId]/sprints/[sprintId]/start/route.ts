@@ -17,12 +17,13 @@ async function checkBoardAdminAccess(boardId: number, userId: number) {
 // POST /api/boards/[boardId]/sprints/[sprintId]/start - Start a sprint
 export async function POST(
   request: NextRequest,
-  { params }: { params: { boardId: string; sprintId: string } }
+  { params }: { params: Promise<{ boardId: string; sprintId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const sprintId = parseInt(params.sprintId);
+    const { boardId: boardIdStr, sprintId: sprintIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const sprintId = parseInt(sprintIdStr);
     
     if (!userId || isNaN(boardId) || isNaN(sprintId)) {
       const errorResponse: ApiError = {

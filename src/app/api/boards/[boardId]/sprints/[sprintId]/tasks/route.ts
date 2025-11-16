@@ -31,12 +31,13 @@ async function checkBoardAccess(boardId: number, userId: number, requiredRole?: 
 // POST /api/boards/[boardId]/sprints/[sprintId]/tasks - Add task to sprint
 export async function POST(
   request: NextRequest,
-  { params }: { params: { boardId: string; sprintId: string } }
+  { params }: { params: Promise<{ boardId: string; sprintId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const sprintId = parseInt(params.sprintId);
+    const { boardId: boardIdStr, sprintId: sprintIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const sprintId = parseInt(sprintIdStr);
     
     if (!userId || isNaN(boardId) || isNaN(sprintId)) {
       const errorResponse: ApiError = {
@@ -137,12 +138,13 @@ export async function POST(
 // DELETE /api/boards/[boardId]/sprints/[sprintId]/tasks - Remove tasks from sprint
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { boardId: string; sprintId: string } }
+  { params }: { params: Promise<{ boardId: string; sprintId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const sprintId = parseInt(params.sprintId);
+    const { boardId: boardIdStr, sprintId: sprintIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const sprintId = parseInt(sprintIdStr);
     
     if (!userId || isNaN(boardId) || isNaN(sprintId)) {
       const errorResponse: ApiError = {

@@ -55,7 +55,7 @@ export default function TaskModal({ task, boardId, columns, members, onClose, on
         column_id: columnId,
         assignee_id: assigneeId || undefined,
         priority,
-        due_date: dueDate || undefined,
+        due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
       };
 
       if (isNewTask) {

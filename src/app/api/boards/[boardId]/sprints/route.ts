@@ -35,11 +35,12 @@ async function checkBoardAccess(boardId: number, userId: number, requiredRole?: 
 // GET /api/boards/[boardId]/sprints - Get all sprints for a board
 export async function GET(
   request: NextRequest,
-  { params }: { params: { boardId: string } }
+  { params }: { params: Promise<{ boardId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
+    const { boardId: boardIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
     
     if (!userId || isNaN(boardId)) {
       const errorResponse: ApiError = {
@@ -98,11 +99,12 @@ export async function GET(
 // POST /api/boards/[boardId]/sprints - Create a new sprint
 export async function POST(
   request: NextRequest,
-  { params }: { params: { boardId: string } }
+  { params }: { params: Promise<{ boardId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
+    const { boardId: boardIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
     
     if (!userId || isNaN(boardId)) {
       const errorResponse: ApiError = {

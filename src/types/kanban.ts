@@ -272,7 +272,7 @@ export const createTaskSchema = z.object({
   assignee_id: z.number().int().positive('Invalid assignee ID').optional(),
   priority: taskPrioritySchema.optional(),
   position: z.number().int().min(0, 'Position must be non-negative'),
-  due_date: z.string().datetime('Invalid date format').optional(),
+  due_date: z.string().optional(),
 });
 
 export const updateTaskSchema = z.object({
@@ -282,7 +282,7 @@ export const updateTaskSchema = z.object({
   assignee_id: z.number().int().positive('Invalid assignee ID').optional(),
   priority: taskPrioritySchema.optional(),
   position: z.number().int().min(0, 'Position must be non-negative').optional(),
-  due_date: z.string().datetime('Invalid date format').optional(),
+  due_date: z.string().optional(),
 });
 
 export const moveTaskSchema = z.object({
@@ -293,16 +293,16 @@ export const moveTaskSchema = z.object({
 export const createSprintSchema = z.object({
   name: z.string().min(1, 'Sprint name is required').max(255, 'Sprint name too long'),
   description: z.string().max(1000, 'Description too long').optional(),
-  start_date: z.string().datetime('Invalid start date format').optional(),
-  end_date: z.string().datetime('Invalid end date format').optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
   goal: z.string().max(500, 'Goal too long').optional(),
 });
 
 export const updateSprintSchema = z.object({
   name: z.string().min(1, 'Sprint name is required').max(255, 'Sprint name too long').optional(),
   description: z.string().max(1000, 'Description too long').optional(),
-  start_date: z.string().datetime('Invalid start date format').optional(),
-  end_date: z.string().datetime('Invalid end date format').optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
   status: sprintStatusSchema.optional(),
   goal: z.string().max(500, 'Goal too long').optional(),
 });

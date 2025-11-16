@@ -20,7 +20,7 @@ import TaskModal from '@/components/TaskModal';
 import ColumnManager from '@/components/ColumnManager';
 import TaskFilter from '@/components/TaskFilter';
 import DeleteBoardModal from '@/components/DeleteBoardModal';
-import { ColumnWithTasks, TaskWithDetails } from '@/types/kanban';
+import { ColumnWithTasks, TaskWithDetails, Sprint } from '@/types/kanban';
 
 interface BoardDetails {
   id: number;
@@ -57,6 +57,7 @@ export default function BoardPage() {
   const [board, setBoard] = useState<BoardDetails | null>(null);
   const [columns, setColumns] = useState<ColumnWithTasks[]>([]);
   const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
+  const [activeSprint, setActiveSprint] = useState<Sprint | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<TaskWithDetails | null>(null);
@@ -115,12 +116,15 @@ export default function BoardPage() {
         return;
       }
 
-      // Fetch board details and tasks in parallel
-      const [boardResponse, tasksResponse] = await Promise.all([
+      // Fetch board details, tasks, and sprints in parallel
+      const [boardResponse, tasksResponse, sprintsResponse] = await Promise.all([
         fetch(`/api/boards/${boardId}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
         fetch(`/api/boards/${boardId}/tasks`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch(`/api/boards/${boardId}/sprints`, {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
       ]);
@@ -132,14 +136,22 @@ export default function BoardPage() {
         return;
       }
 
-      const [boardData, tasksData] = await Promise.all([
+      const [boardData, tasksData, sprintsData] = await Promise.all([
         boardResponse.json(),
         tasksResponse.json(),
+        sprintsResponse.json(),
       ]);
 
       if (boardData.success && tasksData.success) {
         setBoard(boardData.data);
         setTasks(tasksData.data);
+
+        // Find active sprint
+        if (sprintsData.success) {
+          const active = sprintsData.data.find((s: Sprint) => s.status === 'active');
+          setActiveSprint(active || null);
+        }
+
         // organizeTasks will be called by the useEffect
       } else {
         setError(boardData.message || tasksData.message || 'Failed to load board');
@@ -380,6 +392,36 @@ export default function BoardPage() {
           </div>
         </div>
       </div>
+
+      {/* Active Sprint Banner */}
+      {activeSprint && (
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Target className="w-5 h-5" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Active Sprint:</span>
+                    <span>{activeSprint.name}</span>
+                  </div>
+                  {activeSprint.end_date && (
+                    <div className="text-sm text-indigo-100">
+                      Due: {new Date(activeSprint.end_date).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => router.push(`/boards/${boardId}/sprints`)}
+                className="text-white hover:text-indigo-100 text-sm font-medium underline"
+              >
+                Manage Sprints
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (

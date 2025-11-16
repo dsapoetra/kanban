@@ -30,12 +30,13 @@ async function logTaskHistory(taskId: number, userId: number, action: string, fi
 // POST /api/boards/[boardId]/tasks/[taskId]/move - Move task to different column/position
 export async function POST(
   request: NextRequest,
-  { params }: { params: { boardId: string; taskId: string } }
+  { params }: { params: Promise<{ boardId: string; taskId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const taskId = parseInt(params.taskId);
+    const { boardId: boardIdStr, taskId: taskIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const taskId = parseInt(taskIdStr);
     
     if (!userId || isNaN(boardId) || isNaN(taskId)) {
       const errorResponse: ApiError = {

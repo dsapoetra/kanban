@@ -21,11 +21,12 @@ async function checkBoardAccess(boardId: number, userId: number) {
 // GET /api/boards/[boardId]/backlog - Get backlog tasks (tasks not in any sprint)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { boardId: string } }
+  { params }: { params: Promise<{ boardId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
+    const { boardId: boardIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
     
     if (!userId || isNaN(boardId)) {
       const errorResponse: ApiError = {
