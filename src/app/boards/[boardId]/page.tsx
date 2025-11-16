@@ -79,7 +79,7 @@ export default function BoardPage() {
   // Re-organize tasks when filter changes
   useEffect(() => {
     console.log('[BoardPage] useEffect[organizeTasks] triggered. board:', !!board, 'tasks.length:', tasks.length, 'selectedAssignee:', selectedAssignee);
-    if (board && tasks.length > 0) {
+    if (board) {
       console.log('[BoardPage] Calling organizeTasks()');
       organizeTasks();
     }
