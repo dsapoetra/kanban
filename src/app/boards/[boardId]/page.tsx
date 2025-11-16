@@ -50,6 +50,8 @@ export default function BoardPage() {
   const params = useParams();
   const boardId = parseInt(params.boardId as string);
 
+  console.log('[BoardPage] Initializing with boardId:', boardId, 'params:', params);
+
   const [board, setBoard] = useState<BoardDetails | null>(null);
   const [columns, setColumns] = useState<ColumnWithTasks[]>([]);
   const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
@@ -65,20 +67,30 @@ export default function BoardPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    console.log('[BoardPage] useEffect[boardId] triggered. boardId:', boardId);
     if (boardId) {
+      console.log('[BoardPage] Valid boardId, calling fetchBoardData()');
       fetchBoardData();
+    } else {
+      console.error('[BoardPage] Invalid boardId:', boardId);
     }
   }, [boardId]);
 
   // Re-organize tasks when filter changes
   useEffect(() => {
+    console.log('[BoardPage] useEffect[organizeTasks] triggered. board:', !!board, 'tasks.length:', tasks.length, 'selectedAssignee:', selectedAssignee);
     if (board && tasks.length > 0) {
+      console.log('[BoardPage] Calling organizeTasks()');
       organizeTasks();
     }
   }, [selectedAssignee, board, tasks]);
 
   const organizeTasks = () => {
-    if (!board) return;
+    console.log('[organizeTasks] Starting organization. board:', !!board, 'board.columns.length:', board?.columns?.length);
+    if (!board) {
+      console.warn('[organizeTasks] No board data, skipping organization');
+      return;
+    }
 
     // Organize tasks by columns with filtering
     const columnsWithTasks = board.columns.map((column) => {
@@ -101,17 +113,23 @@ export default function BoardPage() {
       };
     });
 
+    console.log('[organizeTasks] Organized columns:', columnsWithTasks.length, 'Total tasks:', columnsWithTasks.reduce((sum, col) => sum + col.tasks.length, 0));
     setColumns(columnsWithTasks as unknown as ColumnWithTasks[]);
   };
 
   const fetchBoardData = async () => {
+    console.log('[fetchBoardData] Starting fetch for boardId:', boardId);
     try {
       const token = localStorage.getItem('token');
+      console.log('[fetchBoardData] Token exists:', !!token, 'Token length:', token?.length);
+
       if (!token) {
+        console.warn('[fetchBoardData] No token found, redirecting to login');
         router.push('/auth/login');
         return;
       }
 
+      console.log('[fetchBoardData] Fetching data from APIs...');
       // Fetch board details, tasks, and sprints in parallel
       const [boardResponse, tasksResponse, sprintsResponse] = await Promise.all([
         fetch(`/api/boards/${boardId}`, {
@@ -125,37 +143,63 @@ export default function BoardPage() {
         }),
       ]);
 
+      console.log('[fetchBoardData] Response statuses - board:', boardResponse.status, 'tasks:', tasksResponse.status, 'sprints:', sprintsResponse.status);
+
       if (boardResponse.status === 401 || tasksResponse.status === 401) {
+        console.warn('[fetchBoardData] Unauthorized (401), clearing auth and redirecting');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         router.push('/auth/login');
         return;
       }
 
+      console.log('[fetchBoardData] Parsing JSON responses...');
       const [boardData, tasksData, sprintsData] = await Promise.all([
         boardResponse.json(),
         tasksResponse.json(),
         sprintsResponse.json(),
       ]);
 
+      console.log('[fetchBoardData] Parsed data:', {
+        boardSuccess: boardData.success,
+        boardDataExists: !!boardData.data,
+        boardColumns: boardData.data?.columns?.length,
+        tasksSuccess: tasksData.success,
+        tasksCount: tasksData.data?.length,
+        sprintsSuccess: sprintsData.success,
+        sprintsCount: sprintsData.data?.length
+      });
+
       if (boardData.success && tasksData.success) {
+        console.log('[fetchBoardData] Setting board and tasks state');
         setBoard(boardData.data);
         setTasks(tasksData.data);
 
         // Find active sprint
         if (sprintsData.success) {
           const active = sprintsData.data.find((s: Sprint) => s.status === 'active');
+          console.log('[fetchBoardData] Active sprint:', active ? active.name : 'none');
           setActiveSprint(active || null);
         }
 
+        console.log('[fetchBoardData] Data fetch successful');
         // organizeTasks will be called by the useEffect
       } else {
-        setError(boardData.message || tasksData.message || 'Failed to load board');
+        const errorMsg = boardData.message || tasksData.message || 'Failed to load board';
+        console.error('[fetchBoardData] API returned error:', errorMsg);
+        setError(errorMsg);
       }
     } catch (error) {
-      console.error('Error fetching board data:', error);
+      console.error('[fetchBoardData] Exception caught:', error);
+      console.error('[fetchBoardData] Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        type: typeof error,
+        error: error
+      });
       setError('Failed to load board data');
     } finally {
+      console.log('[fetchBoardData] Setting isLoading to false');
       setIsLoading(false);
     }
   };
@@ -289,7 +333,10 @@ export default function BoardPage() {
     }
   };
 
+  console.log('[BoardPage] Render decision - isLoading:', isLoading, 'board:', !!board, 'columns.length:', columns.length, 'error:', error);
+
   if (isLoading) {
+    console.log('[BoardPage] Rendering loading state');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading board...</div>
@@ -298,6 +345,7 @@ export default function BoardPage() {
   }
 
   if (!board) {
+    console.log('[BoardPage] Rendering "board not found" state');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -313,6 +361,7 @@ export default function BoardPage() {
     );
   }
 
+  console.log('[BoardPage] Rendering main board view with', columns.length, 'columns');
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Board Header */}
