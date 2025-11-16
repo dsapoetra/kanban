@@ -195,8 +195,24 @@ export interface UpdateMemberRoleRequest {
   role: UserRole;
 }
 
+// Sprint completion statistics
+export interface SprintCompletionStats {
+  completedTasks: number;
+  incompleteTasks: number;
+  totalTasks: number;
+}
+
+// Database User (from database)
+export interface DatabaseUser {
+  id: number;
+  email: string;
+  password_hash: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;

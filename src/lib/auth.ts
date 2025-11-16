@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { JWTPayload, PublicUser } from '@/types/auth';
+import { DatabaseUser } from '@/types/kanban';
 
 // Get JWT secret from environment variables
 function getJWTSecret(): string {
@@ -53,7 +55,7 @@ export function verifyToken(token: string): JWTPayload | null {
     }) as JWTPayload;
 
     return decoded;
-  } catch (error) {
+  } catch {
     // Token is invalid, expired, or malformed
     return null;
   }
@@ -81,13 +83,13 @@ export function extractTokenFromHeader(authHeader: string | null): string | null
  * This is a utility function for generating secrets during development
  */
 export function generateJWTSecret(): string {
-  return require('crypto').randomBytes(64).toString('hex');
+  return crypto.randomBytes(64).toString('hex');
 }
 
 /**
  * Convert database user to public user (remove sensitive data)
  */
-export function toPublicUser(user: any): PublicUser {
+export function toPublicUser(user: DatabaseUser): PublicUser {
   return {
     id: user.id,
     email: user.email,

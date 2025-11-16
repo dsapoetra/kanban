@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { registerSchema, AuthResponse, ApiError } from '@/types/auth';
 import { hashPassword, generateToken, toPublicUser } from '@/lib/auth';
 import { query } from '@/lib/database';
+import { DatabaseUser } from '@/types/kanban';
 import { ZodError } from 'zod';
 
 export async function POST(request: NextRequest) {
@@ -30,9 +31,9 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hashPassword(validatedData.password);
 
     // Insert new user into database
-    const insertResult = await query(
-      `INSERT INTO users (email, password_hash) 
-       VALUES ($1, $2) 
+    const insertResult = await query<DatabaseUser>(
+      `INSERT INTO users (email, password_hash)
+       VALUES ($1, $2)
        RETURNING id, email, created_at, updated_at`,
       [validatedData.email.toLowerCase(), passwordHash]
     );
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Handle validation errors
     if (error instanceof ZodError) {
       const fieldErrors: Record<string, string[]> = {};
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         const field = err.path.join('.');
         if (!fieldErrors[field]) {
           fieldErrors[field] = [];

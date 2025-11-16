@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Plus, Users, Calendar, BarChart3, Trash2, MoreVertical } from 'lucide-react';
+import { Plus, Users, Calendar, BarChart3, Trash2 } from 'lucide-react';
 import CreateBoardModal from '@/components/CreateBoardModal';
 import DeleteBoardModal from '@/components/DeleteBoardModal';
 
@@ -66,8 +65,8 @@ export default function BoardsPage() {
     }
   };
 
-  const handleBoardCreated = (newBoard: Board) => {
-    setBoards([newBoard, ...boards]);
+  const handleBoardCreated = (newBoard: Board | { id: number; name: string; description?: string; owner_id: number; created_at: Date; updated_at: Date }) => {
+    setBoards([newBoard as Board, ...boards]);
   };
 
   const handleDeleteClick = (e: React.MouseEvent, board: Board) => {

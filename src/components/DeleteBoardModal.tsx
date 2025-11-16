@@ -61,7 +61,7 @@ export default function DeleteBoardModal({
         <div className="p-6">
           <div className="mb-4">
             <p className="text-gray-700 mb-2">
-              Are you sure you want to delete the board <strong>"{boardName}"</strong>?
+              Are you sure you want to delete the board <strong>&quot;{boardName}&quot;</strong>?
             </p>
             <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
               <div className="flex items-start gap-2">

@@ -5,10 +5,10 @@ import { ApiResponse, ApiError } from '@/types/kanban';
 // GET /api/invitations/[token] - Get invitation details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const token = params.token;
+    const { token } = await params;
     
     if (!token) {
       const errorResponse: ApiError = {
@@ -77,12 +77,12 @@ export async function GET(
 // POST /api/invitations/[token] - Accept or decline invitation
 export async function POST(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
     const userEmail = request.headers.get('x-user-email');
-    const token = params.token;
+    const { token } = await params;
     
     if (!userId || !userEmail || !token) {
       const errorResponse: ApiError = {

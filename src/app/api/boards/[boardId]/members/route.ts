@@ -24,11 +24,12 @@ async function checkBoardAdminAccess(boardId: number, userId: number) {
 // POST /api/boards/[boardId]/members - Invite a team member
 export async function POST(
   request: NextRequest,
-  { params }: { params: { boardId: string } }
+  { params }: { params: Promise<{ boardId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
+    const { boardId: boardIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
     
     if (!userId || isNaN(boardId)) {
       const errorResponse: ApiError = {
@@ -115,11 +116,12 @@ export async function POST(
 // GET /api/boards/[boardId]/members - Get board members and pending invitations
 export async function GET(
   request: NextRequest,
-  { params }: { params: { boardId: string } }
+  { params }: { params: Promise<{ boardId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
+    const { boardId: boardIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
     
     if (!userId || isNaN(boardId)) {
       const errorResponse: ApiError = {

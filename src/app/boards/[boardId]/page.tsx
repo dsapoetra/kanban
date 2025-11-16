@@ -2,15 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { DndContext, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import {
-  ArrowLeft,
-  Plus,
   Settings,
   Users,
   BarChart3,
-  Calendar,
   Target,
   Columns,
   Trash2
@@ -85,7 +81,7 @@ export default function BoardPage() {
     if (!board) return;
 
     // Organize tasks by columns with filtering
-    const columnsWithTasks = board.columns.map((column: any) => {
+    const columnsWithTasks = board.columns.map((column) => {
       let columnTasks = tasks.filter((task: TaskWithDetails) => task.column_id === column.id);
 
       // Apply assignee filter
@@ -105,7 +101,7 @@ export default function BoardPage() {
       };
     });
 
-    setColumns(columnsWithTasks);
+    setColumns(columnsWithTasks as unknown as ColumnWithTasks[]);
   };
 
   const fetchBoardData = async () => {

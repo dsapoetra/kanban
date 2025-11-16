@@ -110,7 +110,7 @@ export async function POST(
           if (result.rows.length > 0) {
             results.push(result.rows[0]);
           }
-        } catch (error) {
+        } catch {
           // Skip if already exists
           continue;
         }

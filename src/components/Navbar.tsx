@@ -9,8 +9,7 @@ import {
   Settings,
   LogOut,
   Home,
-  ArrowLeft,
-  Target
+  ArrowLeft
 } from 'lucide-react';
 import { PublicUser } from '@/types/auth';
 

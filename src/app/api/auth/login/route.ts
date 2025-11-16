@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Handle validation errors
     if (error instanceof ZodError) {
       const fieldErrors: Record<string, string[]> = {};
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         const field = err.path.join('.');
         if (!fieldErrors[field]) {
           fieldErrors[field] = [];

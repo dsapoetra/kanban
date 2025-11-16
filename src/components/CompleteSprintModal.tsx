@@ -50,7 +50,7 @@ export default function CompleteSprintModal({
         {/* Content */}
         <div className="p-6 space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to complete <strong>"{sprintName}"</strong>?
+            Are you sure you want to complete <strong>&quot;{sprintName}&quot;</strong>?
           </p>
 
           {/* Statistics */}

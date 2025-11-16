@@ -17,11 +17,12 @@ async function checkBoardAccess(boardId: number, userId: number) {
 // GET /api/boards/[boardId]/analytics/burndown?sprintId=123 - Get burndown chart data
 export async function GET(
   request: NextRequest,
-  { params }: { params: { boardId: string } }
+  { params }: { params: Promise<{ boardId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
+    const { boardId: boardIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
     const { searchParams } = new URL(request.url);
     const sprintIdParam = searchParams.get('sprintId');
     

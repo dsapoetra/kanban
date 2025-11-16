@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/database';
-import { 
-  createBoardSchema, 
-  ApiResponse, 
-  ApiError, 
-  Board, 
-  BoardWithMembers 
+import {
+  createBoardSchema,
+  ApiResponse,
+  ApiError,
+  Board
 } from '@/types/kanban';
 import { ZodError } from 'zod';
 

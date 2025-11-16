@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LoginRequest, AuthResponse, ApiError } from '@/types/auth';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [formData, setFormData] = useState<LoginRequest>({
     email: '',
     password: '',
@@ -166,7 +164,7 @@ export default function LoginPage() {
               Forgot your password?
             </Link>
             <div className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link
                 href="/auth/register"
                 className="text-indigo-600 hover:text-indigo-500 font-medium"

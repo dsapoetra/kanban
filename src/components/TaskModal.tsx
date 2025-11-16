@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Trash2, Save } from 'lucide-react';
 import { TaskWithDetails, ColumnWithTasks, TaskPriority } from '@/types/kanban';
 
@@ -48,8 +48,8 @@ export default function TaskModal({ task, boardId, columns, members, onClose, on
         : `/api/boards/${boardId}/tasks/${task.id}`;
       
       const method = isNewTask ? 'POST' : 'PUT';
-      
-      const body: any = {
+
+      const body: Record<string, unknown> = {
         title: title.trim(),
         description: description.trim() || undefined,
         column_id: columnId,

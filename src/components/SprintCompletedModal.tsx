@@ -40,7 +40,7 @@ export default function SprintCompletedModal({
               Sprint Completed! 🎉
             </h2>
             <p className="text-gray-600">
-              <strong>"{sprintName}"</strong> has been successfully completed
+              <strong>&quot;{sprintName}&quot;</strong> has been successfully completed
             </p>
           </div>
         </div>

@@ -16,7 +16,7 @@ function extractTokenFromHeader(authHeader: string | null): string | null {
 }
 
 // Simple JWT payload extraction (without verification for Edge Runtime)
-function extractJWTPayload(token: string): any | null {
+function extractJWTPayload(token: string): { userId: number; email: string } | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) {
@@ -42,7 +42,7 @@ function extractJWTPayload(token: string): any | null {
     }
 
     return decoded;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

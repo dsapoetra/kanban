@@ -10,11 +10,10 @@ import {
   Calendar,
   Target,
   Clock,
-  Trash2,
   X,
   AlertCircle
 } from 'lucide-react';
-import { SprintWithTasks, TaskWithDetails } from '@/types/kanban';
+import { SprintWithTasks, TaskWithDetails, SprintCompletionStats } from '@/types/kanban';
 import CompleteSprintModal from '@/components/CompleteSprintModal';
 import SprintCompletedModal from '@/components/SprintCompletedModal';
 
@@ -37,7 +36,7 @@ export default function SprintDetailPage() {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showCompletedModal, setShowCompletedModal] = useState(false);
   const [isCompletingSprint, setIsCompletingSprint] = useState(false);
-  const [completionStats, setCompletionStats] = useState<any>(null);
+  const [completionStats, setCompletionStats] = useState<SprintCompletionStats | null>(null);
   const [isAddingTasks, setIsAddingTasks] = useState(false);
 
   useEffect(() => {
@@ -615,9 +614,9 @@ export default function SprintDetailPage() {
         <SprintCompletedModal
           isOpen={showCompletedModal}
           sprintName={sprint?.name || ''}
-          completedTasks={completionStats.completed_tasks}
-          incompleteTasks={completionStats.incomplete_moved_to_backlog}
-          completionRate={completionStats.completion_rate}
+          completedTasks={completionStats.completedTasks}
+          incompleteTasks={completionStats.incompleteTasks}
+          completionRate={Math.round((completionStats.completedTasks / completionStats.totalTasks) * 100)}
           onClose={handleCloseCompletedModal}
         />
       )}

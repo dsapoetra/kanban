@@ -22,12 +22,13 @@ async function checkBoardAdminAccess(boardId: number, userId: number) {
 // PUT /api/boards/[boardId]/members/[memberId] - Update member role
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { boardId: string; memberId: string } }
+  { params }: { params: Promise<{ boardId: string; memberId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const memberId = parseInt(params.memberId);
+    const { boardId: boardIdStr, memberId: memberIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const memberId = parseInt(memberIdStr);
     
     if (!userId || isNaN(boardId) || isNaN(memberId)) {
       const errorResponse: ApiError = {
@@ -114,12 +115,13 @@ export async function PUT(
 // DELETE /api/boards/[boardId]/members/[memberId] - Remove member from board
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { boardId: string; memberId: string } }
+  { params }: { params: Promise<{ boardId: string; memberId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const memberId = parseInt(params.memberId);
+    const { boardId: boardIdStr, memberId: memberIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const memberId = parseInt(memberIdStr);
     
     if (!userId || isNaN(boardId) || isNaN(memberId)) {
       const errorResponse: ApiError = {

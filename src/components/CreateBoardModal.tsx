@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { X, Plus, GripVertical, Trash2 } from 'lucide-react';
+import { BoardWithMembers } from '@/types/kanban';
 
 interface CreateBoardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onBoardCreated: (board: any) => void;
+  onBoardCreated: (board: BoardWithMembers) => void;
 }
 
 interface ColumnTemplate {

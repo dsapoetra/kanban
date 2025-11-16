@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/database';
-import { 
-  updateTaskSchema, 
-  moveTaskSchema,
-  ApiResponse, 
+import {
+  updateTaskSchema,
+  ApiResponse,
   ApiError,
-  TaskWithDetails 
+  TaskWithDetails
 } from '@/types/kanban';
 import { ZodError } from 'zod';
 
@@ -43,12 +42,13 @@ async function logTaskHistory(taskId: number, userId: number, action: string, fi
 // GET /api/boards/[boardId]/tasks/[taskId] - Get task details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { boardId: string; taskId: string } }
+  { params }: { params: Promise<{ boardId: string; taskId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const taskId = parseInt(params.taskId);
+    const { boardId: boardIdStr, taskId: taskIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const taskId = parseInt(taskIdStr);
     
     if (!userId || isNaN(boardId) || isNaN(taskId)) {
       const errorResponse: ApiError = {
@@ -129,12 +129,13 @@ export async function GET(
 // PUT /api/boards/[boardId]/tasks/[taskId] - Update task
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { boardId: string; taskId: string } }
+  { params }: { params: Promise<{ boardId: string; taskId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const taskId = parseInt(params.taskId);
+    const { boardId: boardIdStr, taskId: taskIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const taskId = parseInt(taskIdStr);
     
     if (!userId || isNaN(boardId) || isNaN(taskId)) {
       const errorResponse: ApiError = {
@@ -357,12 +358,13 @@ export async function PUT(
 // DELETE /api/boards/[boardId]/tasks/[taskId] - Delete task
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { boardId: string; taskId: string } }
+  { params }: { params: Promise<{ boardId: string; taskId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const taskId = parseInt(params.taskId);
+    const { boardId: boardIdStr, taskId: taskIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const taskId = parseInt(taskIdStr);
 
     if (!userId || isNaN(boardId) || isNaN(taskId)) {
       const errorResponse: ApiError = {

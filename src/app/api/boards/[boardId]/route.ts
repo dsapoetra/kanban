@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, transaction } from '@/lib/database';
+import { query } from '@/lib/database';
 import { 
   updateBoardSchema, 
   ApiResponse, 

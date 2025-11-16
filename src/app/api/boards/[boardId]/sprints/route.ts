@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, transaction } from '@/lib/database';
-import { 
-  createSprintSchema, 
-  ApiResponse, 
+import { query } from '@/lib/database';
+import {
+  createSprintSchema,
+  ApiResponse,
   ApiError,
-  Sprint,
-  SprintWithTasks 
+  Sprint
 } from '@/types/kanban';
 import { ZodError } from 'zod';
 

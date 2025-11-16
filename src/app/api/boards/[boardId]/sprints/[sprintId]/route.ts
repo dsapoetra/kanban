@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, transaction } from '@/lib/database';
+import { query } from '@/lib/database';
 import { 
   updateSprintSchema, 
   ApiResponse, 
@@ -280,12 +280,13 @@ export async function PUT(
 // DELETE /api/boards/[boardId]/sprints/[sprintId] - Delete sprint
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { boardId: string; sprintId: string } }
+  { params }: { params: Promise<{ boardId: string; sprintId: string }> }
 ) {
   try {
     const userId = request.headers.get('x-user-id');
-    const boardId = parseInt(params.boardId);
-    const sprintId = parseInt(params.sprintId);
+    const { boardId: boardIdStr, sprintId: sprintIdStr } = await params;
+    const boardId = parseInt(boardIdStr);
+    const sprintId = parseInt(sprintIdStr);
     
     if (!userId || isNaN(boardId) || isNaN(sprintId)) {
       const errorResponse: ApiError = {

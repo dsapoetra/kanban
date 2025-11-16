@@ -23,14 +23,12 @@ import {
   Target,
   Clock,
   AlertCircle,
-  Trash2,
-  Edit2,
   ListTodo,
   MoreVertical,
   X,
   GripVertical
 } from 'lucide-react';
-import { Sprint, SprintWithTasks, TaskWithDetails } from '@/types/kanban';
+import { Sprint, SprintWithTasks, TaskWithDetails, SprintCompletionStats } from '@/types/kanban';
 import CompleteSprintModal from '@/components/CompleteSprintModal';
 import SprintCompletedModal from '@/components/SprintCompletedModal';
 
@@ -55,11 +53,10 @@ export default function SprintsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedSprint, setSelectedSprint] = useState<Sprint | null>(null);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showCompletedModal, setShowCompletedModal] = useState(false);
   const [isCompletingSprint, setIsCompletingSprint] = useState(false);
-  const [completionStats, setCompletionStats] = useState<any>(null);
+  const [completionStats, setCompletionStats] = useState<SprintCompletionStats | null>(null);
   const [openTaskMenu, setOpenTaskMenu] = useState<number | null>(null);
   const [isAddingTaskToSprint, setIsAddingTaskToSprint] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -150,7 +147,6 @@ export default function SprintsPage() {
   };
 
   const handleCreateSprint = () => {
-    setSelectedSprint(null);
     setShowCreateModal(true);
   };
 
@@ -481,7 +477,7 @@ export default function SprintsPage() {
             <div className="space-y-2">
               <div className="bg-indigo-50 border border-indigo-200 rounded-md p-3 mb-3">
                 <p className="text-sm text-indigo-900">
-                  <strong>💡 Tip:</strong> The backlog contains all tasks that aren't in any sprint.
+                  <strong>💡 Tip:</strong> The backlog contains all tasks that aren&apos;t in any sprint.
                   Create a sprint and add tasks from here to start working on them.
                 </p>
               </div>
@@ -657,9 +653,9 @@ export default function SprintsPage() {
         <SprintCompletedModal
           isOpen={showCompletedModal}
           sprintName={activeSprint?.name || ''}
-          completedTasks={completionStats.completed_tasks}
-          incompleteTasks={completionStats.incomplete_moved_to_backlog}
-          completionRate={completionStats.completion_rate}
+          completedTasks={completionStats.completedTasks}
+          incompleteTasks={completionStats.incompleteTasks}
+          completionRate={Math.round((completionStats.completedTasks / completionStats.totalTasks) * 100)}
           onClose={() => {
             setShowCompletedModal(false);
             setCompletionStats(null);

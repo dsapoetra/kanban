@@ -1,4 +1,4 @@
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 
 // Database connection pool
 let pool: Pool | null = null;
@@ -35,8 +35,10 @@ export function getPool(): Pool {
 /**
  * Execute a query with automatic connection management
  */
-export async function query<T = any>(
-  text: string, 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function query<T extends QueryResultRow = any>(
+  text: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params?: any[]
 ): Promise<QueryResult<T>> {
   const pool = getPool();
