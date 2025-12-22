@@ -19,7 +19,9 @@ export function getPool(): Pool {
       // Connection pool settings optimized for serverless (Vercel)
       max: 1, // Serverless environments should use minimal connections
       idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 10000, // Increased to 10 seconds for serverless cold starts
+      connectionTimeoutMillis: 60000, // Increased to 60 seconds for serverless cold starts
+      statement_timeout: 30000, // 30 seconds max for any single query
+      query_timeout: 30000, // 30 seconds max for query execution
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
     });
 

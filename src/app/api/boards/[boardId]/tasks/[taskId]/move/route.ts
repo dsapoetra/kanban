@@ -157,7 +157,7 @@ export async function POST(
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error('Error moving task:', error);
-    
+
     if (error instanceof ZodError) {
       const errorResponse: ApiError = {
         success: false,
@@ -167,10 +167,19 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
+    // Check if error is a connection/timeout error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isConnectionError = errorMessage.includes('timeout') ||
+                             errorMessage.includes('Connection') ||
+                             errorMessage.includes('connect ETIMEDOUT') ||
+                             errorMessage.includes('ECONNREFUSED');
+
     const errorResponse: ApiError = {
       success: false,
-      message: 'Internal server error',
+      message: isConnectionError
+        ? 'Database connection timeout. Please try again.'
+        : 'Internal server error',
     };
-    return NextResponse.json(errorResponse, { status: 500 });
+    return NextResponse.json(errorResponse, { status: isConnectionError ? 503 : 500 });
   }
 }
