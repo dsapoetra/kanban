@@ -16,10 +16,11 @@ export function getPool(): Pool {
 
     pool = new Pool({
       connectionString: databaseUrl,
-      // Connection pool settings
-      max: 20, // Maximum number of clients in the pool
+      // Connection pool settings optimized for serverless (Vercel)
+      max: 1, // Serverless environments should use minimal connections
       idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+      connectionTimeoutMillis: 10000, // Increased to 10 seconds for serverless cold starts
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
     });
 
     // Handle pool errors
