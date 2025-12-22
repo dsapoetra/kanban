@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Trash2, Save } from 'lucide-react';
 import { TaskWithDetails, ColumnWithTasks, TaskPriority } from '@/types/kanban';
+import RichTextEditor from './RichTextEditor';
 
 interface TaskModalProps {
   task: TaskWithDetails;
@@ -51,7 +52,7 @@ export default function TaskModal({ task, boardId, columns, members, onClose, on
 
       const body: Record<string, unknown> = {
         title: title.trim(),
-        description: description.trim() || undefined,
+        description: description || undefined,
         column_id: columnId,
         assignee_id: assigneeId || undefined,
         priority,
@@ -200,14 +201,12 @@ export default function TaskModal({ task, boardId, columns, members, onClose, on
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description
             </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            <RichTextEditor
+              content={description}
+              onChange={setDescription}
               placeholder="Enter task description"
-              rows={4}
-              maxLength={2000}
               disabled={isLoading}
+              maxLength={10000}
             />
           </div>
 

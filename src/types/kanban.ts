@@ -283,7 +283,7 @@ export const updateColumnSchema = z.object({
 
 export const createTaskSchema = z.object({
   title: z.string().min(1, 'Task title is required').max(255, 'Task title too long'),
-  description: z.string().max(2000, 'Description too long').optional(),
+  description: z.string().max(50000, 'Description too long').optional(),
   column_id: z.number().int().positive('Invalid column ID'),
   assignee_id: z.number().int().positive('Invalid assignee ID').optional(),
   priority: taskPrioritySchema.optional(),
@@ -293,7 +293,7 @@ export const createTaskSchema = z.object({
 
 export const updateTaskSchema = z.object({
   title: z.string().min(1, 'Task title is required').max(255, 'Task title too long').optional(),
-  description: z.string().max(2000, 'Description too long').optional(),
+  description: z.string().max(50000, 'Description too long').optional(),
   column_id: z.number().int().positive('Invalid column ID').optional(),
   assignee_id: z.number().int().positive('Invalid assignee ID').optional(),
   priority: taskPrioritySchema.optional(),

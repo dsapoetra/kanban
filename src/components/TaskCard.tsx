@@ -73,9 +73,10 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
 
       {/* Task Description */}
       {task.description && (
-        <p className="text-gray-600 text-xs mb-3 line-clamp-2">
-          {task.description}
-        </p>
+        <div
+          className="text-gray-600 text-xs mb-3 line-clamp-2 prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: task.description }}
+        />
       )}
 
       {/* Task Metadata */}
