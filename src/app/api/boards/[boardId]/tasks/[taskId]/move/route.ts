@@ -58,12 +58,16 @@ export async function POST(
     const body = await request.json();
     const validatedData = moveTaskSchema.parse(body);
 
-    // Get current task data
-    const currentTaskResult = await query(`
-      SELECT * FROM tasks WHERE id = $1 AND board_id = $2
-    `, [taskId, boardId]);
+    // Combine task and column validation into single query for speed
+    const validationResult = await query(`
+      SELECT
+        t.*,
+        EXISTS(SELECT 1 FROM columns WHERE id = $3 AND board_id = $2) as column_exists
+      FROM tasks t
+      WHERE t.id = $1 AND t.board_id = $2
+    `, [taskId, boardId, validatedData.column_id]);
 
-    if (currentTaskResult.rows.length === 0) {
+    if (validationResult.rows.length === 0) {
       const errorResponse: ApiError = {
         success: false,
         message: 'Task not found',
@@ -71,15 +75,9 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: 404 });
     }
 
-    const currentTask = currentTaskResult.rows[0];
+    const currentTask = validationResult.rows[0];
 
-    // Verify target column belongs to board
-    const columnResult = await query(`
-      SELECT id FROM columns 
-      WHERE id = $1 AND board_id = $2
-    `, [validatedData.column_id, boardId]);
-
-    if (columnResult.rows.length === 0) {
+    if (!currentTask.column_exists) {
       const errorResponse: ApiError = {
         success: false,
         message: 'Target column not found in this board',
@@ -87,66 +85,77 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
-    // Move task in a transaction
+    // Move task in a transaction - optimized for speed
     const result = await transaction(async (client) => {
       const oldColumnId = currentTask.column_id;
       const oldPosition = currentTask.position;
       const newColumnId = validatedData.column_id;
       const newPosition = validatedData.position;
 
-      if (oldColumnId === newColumnId) {
-        // Moving within same column
-        if (oldPosition === newPosition) {
-          // No change needed
-          return currentTask;
-        }
-
-        if (newPosition > oldPosition) {
-          // Moving down - shift tasks up
-          await client.query(`
-            UPDATE tasks 
-            SET position = position - 1 
-            WHERE column_id = $1 AND position > $2 AND position <= $3
-          `, [oldColumnId, oldPosition, newPosition]);
-        } else {
-          // Moving up - shift tasks down
-          await client.query(`
-            UPDATE tasks 
-            SET position = position + 1 
-            WHERE column_id = $1 AND position >= $2 AND position < $3
-          `, [oldColumnId, newPosition, oldPosition]);
-        }
-      } else {
-        // Moving to different column
-        // Remove from old column - shift tasks up
-        await client.query(`
-          UPDATE tasks 
-          SET position = position - 1 
-          WHERE column_id = $1 AND position > $2
-        `, [oldColumnId, oldPosition]);
-
-        // Make room in new column - shift tasks down
-        await client.query(`
-          UPDATE tasks 
-          SET position = position + 1 
-          WHERE column_id = $1 AND position >= $2
-        `, [newColumnId, newPosition]);
-
-        // Log column change
-        await logTaskHistory(taskId, parseInt(userId), 'moved', 'column', 
-          oldColumnId.toString(), newColumnId.toString());
+      // Early exit if no change needed
+      if (oldColumnId === newColumnId && oldPosition === newPosition) {
+        return currentTask;
       }
 
-      // Update task position and column
+      if (oldColumnId === newColumnId) {
+        // Moving within same column - single optimized query
+        if (newPosition > oldPosition) {
+          // Moving down - shift tasks up and update in one query
+          await client.query(`
+            UPDATE tasks
+            SET position = CASE
+              WHEN id = $1 THEN $2
+              WHEN position > $3 AND position <= $2 THEN position - 1
+              ELSE position
+            END,
+            updated_at = CASE WHEN id = $1 THEN CURRENT_TIMESTAMP ELSE updated_at END
+            WHERE column_id = $4 AND (id = $1 OR (position > $3 AND position <= $2))
+          `, [taskId, newPosition, oldPosition, oldColumnId]);
+        } else {
+          // Moving up - shift tasks down and update in one query
+          await client.query(`
+            UPDATE tasks
+            SET position = CASE
+              WHEN id = $1 THEN $2
+              WHEN position >= $2 AND position < $3 THEN position + 1
+              ELSE position
+            END,
+            updated_at = CASE WHEN id = $1 THEN CURRENT_TIMESTAMP ELSE updated_at END
+            WHERE column_id = $4 AND (id = $1 OR (position >= $2 AND position < $3))
+          `, [taskId, newPosition, oldPosition, oldColumnId]);
+        }
+      } else {
+        // Moving to different column - combine updates for efficiency
+        await client.query(`
+          UPDATE tasks
+          SET position = CASE
+            WHEN id = $1 THEN $2
+            WHEN column_id = $3 AND position > $4 THEN position - 1
+            WHEN column_id = $5 AND position >= $2 THEN position + 1
+            ELSE position
+          END,
+          column_id = CASE WHEN id = $1 THEN $5 ELSE column_id END,
+          updated_at = CASE WHEN id = $1 THEN CURRENT_TIMESTAMP ELSE updated_at END
+          WHERE id = $1 OR (column_id = $3 AND position > $4) OR (column_id = $5 AND position >= $2)
+        `, [taskId, newPosition, oldColumnId, oldPosition, newColumnId]);
+      }
+
+      // Get updated task data
       const updateResult = await client.query(`
-        UPDATE tasks 
-        SET column_id = $1, position = $2, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $3 AND board_id = $4
-        RETURNING *
-      `, [newColumnId, newPosition, taskId, boardId]);
+        SELECT * FROM tasks WHERE id = $1 AND board_id = $2
+      `, [taskId, boardId]);
 
       return updateResult.rows[0];
     });
+
+    // Log history AFTER transaction completes (non-blocking)
+    if (currentTask.column_id !== validatedData.column_id) {
+      // Don't await - fire and forget to avoid blocking response
+      logTaskHistory(taskId, parseInt(userId), 'moved', 'column',
+        currentTask.column_id.toString(), validatedData.column_id.toString()).catch(err => {
+        console.error('Failed to log task history:', err);
+      });
+    }
 
     const response: ApiResponse = {
       success: true,

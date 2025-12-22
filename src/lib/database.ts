@@ -16,12 +16,12 @@ export function getPool(): Pool {
 
     pool = new Pool({
       connectionString: databaseUrl,
-      // Connection pool settings optimized for serverless (Vercel)
+      // Connection pool settings optimized for serverless (Vercel) and Neon
       max: 1, // Serverless environments should use minimal connections
       idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 60000, // Increased to 60 seconds for serverless cold starts
-      statement_timeout: 30000, // 30 seconds max for any single query
-      query_timeout: 30000, // 30 seconds max for query execution
+      connectionTimeoutMillis: 10000, // 10 seconds for connection
+      statement_timeout: 5000, // 5 seconds max (Neon free tier limit)
+      query_timeout: 5000, // 5 seconds max (Neon free tier limit)
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
     });
 
