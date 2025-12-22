@@ -42,10 +42,7 @@ export async function GET(
     const { boardId: boardIdParam } = await params;
     const boardId = parseInt(boardIdParam);
 
-    console.log('[API /api/boards/[boardId] GET] Request received. boardId:', boardId, 'userId:', userId);
-
     if (!userId || isNaN(boardId)) {
-      console.warn('[API /api/boards/[boardId] GET] Invalid parameters. userId:', userId, 'boardId:', boardId);
       const errorResponse: ApiError = {
         success: false,
         message: 'Invalid request parameters',
@@ -53,10 +50,8 @@ export async function GET(
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
-    console.log('[API /api/boards/[boardId] GET] Checking board access...');
     const access = await checkBoardAccess(boardId, parseInt(userId));
     if (!access) {
-      console.warn('[API /api/boards/[boardId] GET] Access denied or board not found for boardId:', boardId, 'userId:', userId);
       const errorResponse: ApiError = {
         success: false,
         message: 'Board not found or access denied',
@@ -64,7 +59,6 @@ export async function GET(
       return NextResponse.json(errorResponse, { status: 404 });
     }
 
-    console.log('[API /api/boards/[boardId] GET] Access granted. Fetching members and columns...');
     // Get board with members and columns
     const [membersResult, columnsResult] = await Promise.all([
       query(`
@@ -86,8 +80,6 @@ export async function GET(
       `, [boardId])
     ]);
 
-    console.log('[API /api/boards/[boardId] GET] Query results - members:', membersResult.rows.length, 'columns:', columnsResult.rows.length);
-
     const boardWithDetails: BoardWithMembers = {
       ...access.board,
       owner: { id: access.board.owner_id, email: access.board.owner_email },
@@ -102,8 +94,6 @@ export async function GET(
       columns: columnsResult.rows
     };
 
-    console.log('[API /api/boards/[boardId] GET] Success. Returning board details with', boardWithDetails.columns.length, 'columns');
-
     const response: ApiResponse<BoardWithMembers> = {
       success: true,
       message: 'Board retrieved successfully',
@@ -112,12 +102,7 @@ export async function GET(
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error('[API /api/boards/[boardId] GET] Exception caught:', error);
-    console.error('[API /api/boards/[boardId] GET] Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      type: typeof error
-    });
+    console.error('[API /api/boards/[boardId] GET] Exception:', error);
     const errorResponse: ApiError = {
       success: false,
       message: 'Internal server error',

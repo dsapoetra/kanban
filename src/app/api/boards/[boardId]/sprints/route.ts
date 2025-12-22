@@ -41,10 +41,7 @@ export async function GET(
     const { boardId: boardIdStr } = await params;
     const boardId = parseInt(boardIdStr);
 
-    console.log('[API /api/boards/[boardId]/sprints GET] Request received. boardId:', boardId, 'userId:', userId);
-
     if (!userId || isNaN(boardId)) {
-      console.warn('[API /api/boards/[boardId]/sprints GET] Invalid parameters. userId:', userId, 'boardId:', boardId);
       const errorResponse: ApiError = {
         success: false,
         message: 'Invalid request parameters',
@@ -52,10 +49,8 @@ export async function GET(
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
-    console.log('[API /api/boards/[boardId]/sprints GET] Checking board access...');
     const access = await checkBoardAccess(boardId, parseInt(userId));
     if (!access) {
-      console.warn('[API /api/boards/[boardId]/sprints GET] Access denied or board not found for boardId:', boardId, 'userId:', userId);
       const errorResponse: ApiError = {
         success: false,
         message: 'Board not found or access denied',
@@ -63,7 +58,6 @@ export async function GET(
       return NextResponse.json(errorResponse, { status: 404 });
     }
 
-    console.log('[API /api/boards/[boardId]/sprints GET] Access granted. Fetching sprints...');
     // Get sprints with task counts
     const sprintsResult = await query(`
       SELECT
@@ -78,16 +72,11 @@ export async function GET(
       ORDER BY s.created_at DESC
     `, [boardId]);
 
-    console.log('[API /api/boards/[boardId]/sprints GET] Query result - sprints found:', sprintsResult.rows.length);
-
     const sprints = sprintsResult.rows.map(row => ({
       ...row,
       task_count: parseInt(row.task_count),
       completed_tasks: parseInt(row.completed_tasks)
     }));
-
-    const activeSprints = sprints.filter(s => s.status === 'active');
-    console.log('[API /api/boards/[boardId]/sprints GET] Success. Returning', sprints.length, 'sprints (', activeSprints.length, 'active)');
 
     const response: ApiResponse<typeof sprints> = {
       success: true,

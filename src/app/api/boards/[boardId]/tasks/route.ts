@@ -49,10 +49,7 @@ export async function GET(
     const { boardId: boardIdParam } = await params;
     const boardId = parseInt(boardIdParam);
 
-    console.log('[API /api/boards/[boardId]/tasks GET] Request received. boardId:', boardId, 'userId:', userId);
-
     if (!userId || isNaN(boardId)) {
-      console.warn('[API /api/boards/[boardId]/tasks GET] Invalid parameters. userId:', userId, 'boardId:', boardId);
       const errorResponse: ApiError = {
         success: false,
         message: 'Invalid request parameters',
@@ -60,10 +57,8 @@ export async function GET(
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
-    console.log('[API /api/boards/[boardId]/tasks GET] Checking board access...');
     const access = await checkBoardAccess(boardId, parseInt(userId));
     if (!access) {
-      console.warn('[API /api/boards/[boardId]/tasks GET] Access denied or board not found for boardId:', boardId, 'userId:', userId);
       const errorResponse: ApiError = {
         success: false,
         message: 'Board not found or access denied',
@@ -71,7 +66,6 @@ export async function GET(
       return NextResponse.json(errorResponse, { status: 404 });
     }
 
-    console.log('[API /api/boards/[boardId]/tasks GET] Access granted. Fetching tasks...');
     // Get tasks with details
     const tasksResult = await query(`
       SELECT
@@ -86,8 +80,6 @@ export async function GET(
       WHERE t.board_id = $1
       ORDER BY c.position ASC, t.position ASC
     `, [boardId]);
-
-    console.log('[API /api/boards/[boardId]/tasks GET] Query result - tasks found:', tasksResult.rows.length);
 
     const tasks: TaskWithDetails[] = tasksResult.rows.map(row => ({
       id: row.id,
@@ -108,8 +100,6 @@ export async function GET(
       column: { id: row.column_id, name: row.column_name, color: row.column_color }
     }));
 
-    console.log('[API /api/boards/[boardId]/tasks GET] Success. Returning', tasks.length, 'tasks');
-
     const response: ApiResponse<TaskWithDetails[]> = {
       success: true,
       message: 'Tasks retrieved successfully',
@@ -118,12 +108,7 @@ export async function GET(
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error('[API /api/boards/[boardId]/tasks GET] Exception caught:', error);
-    console.error('[API /api/boards/[boardId]/tasks GET] Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      type: typeof error
-    });
+    console.error('[API /api/boards/[boardId]/tasks GET] Exception:', error);
     const errorResponse: ApiError = {
       success: false,
       message: 'Internal server error',
