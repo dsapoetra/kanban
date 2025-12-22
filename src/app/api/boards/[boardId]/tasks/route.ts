@@ -24,8 +24,14 @@ async function checkBoardAccess(boardId: number, userId: number, requiredRole?: 
   const board = result.rows[0];
   const userRole = board.owner_id === userId ? 'admin' : board.role;
 
-  if (requiredRole && requiredRole === 'admin' && userRole !== 'admin') {
-    return null;
+  if (requiredRole) {
+    if (requiredRole === 'admin' && userRole !== 'admin') {
+      return null;
+    }
+    // Members and admins can write, viewers cannot
+    if (requiredRole === 'member' && userRole === 'viewer') {
+      return null;
+    }
   }
 
   return { board, userRole };
@@ -135,13 +141,14 @@ export async function POST(
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
-    const access = await checkBoardAccess(boardId, parseInt(userId));
+    // Check access with 'member' role required (viewers cannot create tasks)
+    const access = await checkBoardAccess(boardId, parseInt(userId), 'member');
     if (!access) {
       const errorResponse: ApiError = {
         success: false,
-        message: 'Board not found or access denied',
+        message: 'Board not found or access denied. Only members and admins can create tasks.',
       };
-      return NextResponse.json(errorResponse, { status: 404 });
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     const body = await request.json();

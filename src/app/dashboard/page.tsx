@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PublicUser } from '@/types/auth';
-import { BarChart3, Users, Plus, Calendar, Target } from 'lucide-react';
+import { BarChart3, Users, Plus, Calendar, Target, Mail, Check, X } from 'lucide-react';
 
 interface Board {
   id: number;
@@ -16,11 +16,28 @@ interface Board {
   owner: { id: number; email: string };
 }
 
+interface PendingInvitation {
+  id: number;
+  board_id: number;
+  board_name: string;
+  board_description?: string;
+  inviter_id: number;
+  inviter_email: string;
+  invitee_email: string;
+  role: string;
+  token: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<PublicUser | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [processingInvitation, setProcessingInvitation] = useState<number | null>(null);
 
   useEffect(() => {
     // Get user data from localStorage
@@ -36,6 +53,7 @@ export default function DashboardPage() {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       fetchRecentBoards(token);
+      fetchPendingInvitations(token);
     } catch (error) {
       console.error('Error parsing user data:', error);
       router.push('/auth/login');
@@ -64,6 +82,65 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchPendingInvitations = async (token: string) => {
+    try {
+      const response = await fetch('/api/invitations/my-invitations', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setPendingInvitations(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching pending invitations:', error);
+    }
+  };
+
+  const handleInvitationResponse = async (token: string, action: 'accept' | 'decline') => {
+    const authToken = localStorage.getItem('token');
+    if (!authToken) return;
+
+    const invitation = pendingInvitations.find(inv => inv.token === token);
+    if (!invitation) return;
+
+    setProcessingInvitation(invitation.id);
+
+    try {
+      const response = await fetch(`/api/invitations/${token}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      if (response.ok) {
+        // Remove the invitation from the list
+        setPendingInvitations(prev => prev.filter(inv => inv.token !== token));
+
+        if (action === 'accept') {
+          // Refresh boards to show the newly accessible board
+          fetchRecentBoards(authToken);
+          // Optionally redirect to the board
+          // router.push(`/boards/${invitation.board_id}`);
+        }
+      } else {
+        const data = await response.json();
+        alert(data.message || `Failed to ${action} invitation`);
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing invitation:`, error);
+      alert(`Failed to ${action} invitation`);
+    } finally {
+      setProcessingInvitation(null);
+    }
+  };
 
 
   if (isLoading) {
@@ -92,6 +169,70 @@ export default function DashboardPage() {
               Here&apos;s what&apos;s happening with your projects today.
             </p>
           </div>
+
+          {/* Pending Invitations */}
+          {pendingInvitations.length > 0 && (
+            <div className="mb-8">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div className="flex items-center mb-4">
+                  <Mail className="h-6 w-6 text-blue-600 mr-2" />
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Pending Invitations ({pendingInvitations.length})
+                  </h2>
+                </div>
+                <div className="space-y-3">
+                  {pendingInvitations.map((invitation) => (
+                    <div
+                      key={invitation.id}
+                      className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-medium text-gray-900 mb-1">
+                            {invitation.board_name}
+                          </h3>
+                          {invitation.board_description && (
+                            <p className="text-sm text-gray-600 mb-2">
+                              {invitation.board_description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>
+                              Invited by: <span className="font-medium text-gray-700">{invitation.inviter_email}</span>
+                            </span>
+                            <span>
+                              Role: <span className="font-medium text-gray-700 capitalize">{invitation.role}</span>
+                            </span>
+                            <span>
+                              Expires: {new Date(invitation.expires_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() => handleInvitationResponse(invitation.token, 'accept')}
+                            disabled={processingInvitation === invitation.id}
+                            className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md text-sm font-medium transition-colors"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleInvitationResponse(invitation.token, 'decline')}
+                            disabled={processingInvitation === invitation.id}
+                            className="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-md text-sm font-medium transition-colors"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
