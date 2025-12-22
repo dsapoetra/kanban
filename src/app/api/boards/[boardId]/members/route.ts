@@ -149,19 +149,17 @@ export async function GET(
     // Get members and pending invitations
     const [membersResult, invitationsResult] = await Promise.all([
       query(`
-        SELECT bm.id, bm.board_id, bm.user_id, bm.role, bm.joined_at, u.email, u.created_at as user_created_at
+        SELECT bm.id, bm.board_id, bm.user_id, bm.role, bm.joined_at,
+               json_build_object('id', u.id, 'email', u.email) as user
         FROM board_members bm
         JOIN users u ON bm.user_id = u.id
         WHERE bm.board_id = $1
-        UNION
-        SELECT NULL as id, $1 as board_id, u.id as user_id, 'admin' as role, b.created_at as joined_at, u.email, u.created_at as user_created_at
-        FROM boards b
-        JOIN users u ON b.owner_id = u.id
-        WHERE b.id = $1
-        ORDER BY joined_at ASC
+        ORDER BY bm.joined_at ASC
       `, [boardId]),
       query(`
-        SELECT ti.*, u.email as inviter_email
+        SELECT ti.id, ti.board_id, ti.inviter_id, ti.invitee_email,
+               ti.role, ti.token, ti.status, ti.created_at, ti.expires_at,
+               json_build_object('id', u.id, 'email', u.email) as inviter
         FROM team_invitations ti
         JOIN users u ON ti.inviter_id = u.id
         WHERE ti.board_id = $1 AND ti.status = 'pending' AND ti.expires_at > CURRENT_TIMESTAMP
@@ -174,7 +172,7 @@ export async function GET(
       message: 'Board members retrieved successfully',
       data: {
         members: membersResult.rows,
-        pending_invitations: invitationsResult.rows,
+        invitations: invitationsResult.rows,
       },
     };
 
